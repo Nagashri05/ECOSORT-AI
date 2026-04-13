@@ -615,6 +615,11 @@ function displayResult(searchedTerm, data) {
   setTimeout(() => {
     resultContainer.classList.add('show');
   }, 50);
+
+  // Track the sort if it's a known valid item
+  if (data.category !== 'Unknown') {
+    trackSort(data.category);
+  }
 }
 
 // Helper
@@ -631,3 +636,398 @@ searchInput.addEventListener('keypress', function (e) {
     classifyWaste();
   }
 });
+
+// --- Gamification & Impact Dashboard ---
+
+// State
+let stats = JSON.parse(localStorage.getItem('ecoStats')) || {
+  recyclable: 0,
+  organic: 0,
+  hazardous: 0
+};
+
+const badges = [
+  { id: 'compost_king', name: 'Compost King', icon: 'ph-leaf', reqType: 'organic', reqCount: 5 },
+  { id: 'recycle_hero', name: 'Recycle Hero', icon: 'ph-recycle', reqType: 'recyclable', reqCount: 5 },
+  { id: 'toxic_avenger', name: 'Safe Disposer', icon: 'ph-warning-circle', reqType: 'hazardous', reqCount: 2 },
+  { id: 'eco_novice', name: 'Eco Novice', icon: 'ph-plant', reqType: 'any', reqCount: 1 },
+  { id: 'eco_master', name: 'Eco Master', icon: 'ph-tree', reqType: 'any', reqCount: 15 },
+  { id: 'daily_streak', name: 'Challenger', icon: 'ph-star', reqType: 'challenge', reqCount: 1 }
+];
+
+// Elements
+const dashboardBtn = document.getElementById('dashboard-btn');
+const dashboardModal = document.getElementById('dashboard-modal');
+const closeDashboardBtn = document.getElementById('close-dashboard');
+const challengeModal = document.getElementById('challenge-modal');
+const closeChallengeBtn = document.getElementById('close-challenge');
+const acceptChallengeBtn = document.getElementById('accept-challenge-btn');
+const badgesGrid = document.getElementById('badges-grid');
+
+// Update Stats UI
+function updateDashboardUI() {
+  document.getElementById('stat-recyclable').textContent = stats.recyclable;
+  document.getElementById('stat-organic').textContent = stats.organic;
+  document.getElementById('stat-hazardous').textContent = stats.hazardous;
+
+  // Render Badges
+  badgesGrid.innerHTML = '';
+  const totalItems = stats.recyclable + stats.organic + stats.hazardous;
+  const challengeCompleted = localStorage.getItem('challengeCompleted') === 'true';
+
+  badges.forEach(badge => {
+    let unlocked = false;
+    if (badge.reqType === 'any' && totalItems >= badge.reqCount) unlocked = true;
+    else if (badge.reqType === 'challenge' && challengeCompleted) unlocked = true;
+    else if (stats[badge.reqType] >= badge.reqCount) unlocked = true;
+
+    const badgeEl = document.createElement('div');
+    badgeEl.className = `badge ${unlocked ? 'unlocked' : ''}`;
+    badgeEl.innerHTML = `
+      <i class="ph-fill ${badge.icon} badge-icon"></i>
+      <div class="badge-name">${badge.name}</div>
+    `;
+    badgesGrid.appendChild(badgeEl);
+  });
+}
+
+// Track Sort
+function trackSort(category) {
+  if (category.includes('Recyclable')) stats.recyclable++;
+  if (category.includes('Organic')) stats.organic++;
+  if (category.includes('Hazardous')) stats.hazardous++;
+  
+  localStorage.setItem('ecoStats', JSON.stringify(stats));
+  updateDashboardUI();
+}
+
+// Event Listeners for Modals
+dashboardBtn.addEventListener('click', () => {
+  updateDashboardUI();
+  dashboardModal.classList.remove('hidden');
+});
+
+closeDashboardBtn.addEventListener('click', () => {
+  dashboardModal.classList.add('hidden');
+});
+
+closeChallengeBtn.addEventListener('click', () => {
+  challengeModal.classList.add('hidden');
+});
+
+acceptChallengeBtn.addEventListener('click', () => {
+  // Add 50 points (addScore adds 10, so loop 5 times)
+  for(let i=0; i<5; i++) addScore(); 
+  localStorage.setItem('challengeCompleted', 'true');
+  challengeModal.classList.add('hidden');
+  updateDashboardUI();
+});
+
+// Daily Challenge Initialization
+const dailyChallenges = [
+  "Bring a reusable bag to the grocery store today.",
+  "Turn off the lights when leaving a room.",
+  "Take a 5-minute shorter shower.",
+  "Upcycle a plastic container instead of throwing it away.",
+  "Avoid using single-use plastic straws today."
+];
+
+function initDailyChallenge() {
+  const lastDate = localStorage.getItem('lastChallengeDate');
+  const today = new Date().toDateString();
+  
+  if (lastDate !== today) {
+    // New day, show challenge
+    localStorage.setItem('lastChallengeDate', today);
+    localStorage.setItem('challengeCompleted', 'false');
+    
+    document.getElementById('daily-challenge-text').textContent = 
+      dailyChallenges[Math.floor(Math.random() * dailyChallenges.length)];
+      
+    setTimeout(() => {
+      challengeModal.classList.remove('hidden');
+    }, 1500);
+  }
+}
+
+// Initialize on load
+updateDashboardUI();
+initDailyChallenge();
+
+// --- Trash Dash Mini-Game ---
+
+const gameBtn = document.getElementById('launch-game-btn');
+const gameModal = document.getElementById('game-modal');
+const closeGameBtn = document.getElementById('close-game');
+const startGameBtn = document.getElementById('start-game-btn');
+const restartGameBtn = document.getElementById('restart-game-btn');
+
+const startOverlay = document.getElementById('game-start-overlay');
+const gameOverOverlay = document.getElementById('game-over-overlay');
+const timerBar = document.getElementById('game-timer-bar');
+const itemContainer = document.getElementById('falling-item');
+const itemIcon = document.getElementById('game-item-icon');
+const itemName = document.getElementById('game-item-name');
+const gameFeedback = document.getElementById('game-feedback');
+const gameScoreDisplay = document.getElementById('game-score-display');
+const earnedPtsDisplay = document.getElementById('earned-pts');
+
+let gameLives = 3;
+let gameScore = 0;
+let currentItemKey = null;
+let gameTimer;
+let timeLeft = 3000;
+const MAX_TIME = 3000;
+
+const gameItems = Object.keys(wasteDatabase);
+
+gameBtn.addEventListener('click', () => {
+  gameModal.classList.remove('hidden');
+  resetGameUI();
+});
+
+closeGameBtn.addEventListener('click', () => {
+  gameModal.classList.add('hidden');
+  clearInterval(gameTimer);
+});
+
+startGameBtn.addEventListener('click', startGame);
+restartGameBtn.addEventListener('click', startGame);
+
+const quitGameBtns = document.querySelectorAll('.quit-game-btn');
+quitGameBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    gameModal.classList.add('hidden');
+    clearInterval(gameTimer);
+  });
+});
+
+// Sound Effects (Web Audio API)
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new AudioContext();
+  }
+}
+
+function playTone(freq, type, duration, vol=0.1) {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function playSuccessSound() {
+  playTone(523.25, 'sine', 0.1, 0.1); 
+  setTimeout(() => playTone(659.25, 'sine', 0.2, 0.1), 100); 
+}
+
+function playErrorSound() {
+  playTone(150, 'sawtooth', 0.3, 0.2);
+}
+
+function playGameOverSound() {
+  playTone(300, 'square', 0.2, 0.1);
+  setTimeout(() => playTone(250, 'square', 0.2, 0.1), 200);
+  setTimeout(() => playTone(200, 'square', 0.4, 0.1), 400);
+}
+
+function playGameStartSound() {
+  playTone(440, 'sine', 0.1, 0.1); 
+  setTimeout(() => playTone(554.37, 'sine', 0.1, 0.1), 150); 
+  setTimeout(() => playTone(659.25, 'sine', 0.2, 0.1), 300); 
+  setTimeout(() => playTone(880, 'sine', 0.4, 0.1), 450); 
+}
+
+function playTimerWarningSound() {
+  playTone(800, 'square', 0.05, 0.05);
+  setTimeout(() => playTone(800, 'square', 0.05, 0.05), 150);
+  setTimeout(() => playTone(800, 'square', 0.05, 0.05), 300);
+}
+
+function resetGameUI() {
+  startOverlay.classList.remove('hidden');
+  gameOverOverlay.classList.add('hidden');
+  gameScore = 0;
+  gameLives = 3;
+  updateGameHeader();
+}
+
+function startGame() {
+  initAudio();
+  playGameStartSound();
+  startOverlay.classList.add('hidden');
+  gameOverOverlay.classList.add('hidden');
+  gameScore = 0;
+  gameLives = 3;
+  updateGameHeader();
+  nextItem();
+}
+
+function updateGameHeader() {
+  gameScoreDisplay.textContent = gameScore;
+  for(let i=1; i<=3; i++) {
+    const heart = document.getElementById(`life-${i}`);
+    if (i <= gameLives) {
+      heart.classList.remove('heart-lost');
+    } else {
+      heart.classList.add('heart-lost');
+    }
+  }
+}
+
+function nextItem() {
+  if (gameLives <= 0) return endGame();
+  
+  // Pick random item
+  currentItemKey = gameItems[Math.floor(Math.random() * gameItems.length)];
+  const data = wasteDatabase[currentItemKey];
+  
+  itemName.textContent = currentItemKey.toUpperCase();
+  itemIcon.className = `ph-fill ${data.icon}`;
+  
+  // Reset animations
+  itemContainer.className = 'falling-item anim-wobble';
+  setTimeout(() => itemContainer.classList.remove('anim-wobble'), 200);
+  
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(gameTimer);
+  
+  // Decrease time slightly as score goes up makes it harder
+  timeLeft = Math.max(1000, MAX_TIME - (gameScore * 60)); 
+  let current = timeLeft;
+  
+  timerBar.style.width = '100%';
+  timerBar.style.backgroundColor = 'var(--primary)';
+  
+  let warningPlayed = false;
+  const tickRate = 20;
+  
+  gameTimer = setInterval(() => {
+    current -= tickRate;
+    const percent = (current / timeLeft) * 100;
+    timerBar.style.width = `${percent}%`;
+    
+    if (percent < 30) {
+      timerBar.style.backgroundColor = 'var(--hazardous)';
+      if (!warningPlayed) {
+        warningPlayed = true;
+        playTimerWarningSound();
+      }
+    } else if (percent < 60) {
+      timerBar.style.backgroundColor = 'var(--general)';
+    }
+    
+    if (current <= 0) {
+      clearInterval(gameTimer);
+      handleTimeout();
+    }
+  }, tickRate);
+}
+
+function handleTimeout() {
+  playErrorSound();
+  showFeedback("TOO SLOW!", true);
+  loseLife();
+}
+
+function loseLife() {
+  gameLives--;
+  updateGameHeader();
+  if (gameLives > 0) {
+    setTimeout(nextItem, 1000);
+  } else {
+    setTimeout(endGame, 1000);
+  }
+}
+
+function endGame() {
+  playGameOverSound();
+  clearInterval(gameTimer);
+  gameOverOverlay.classList.remove('hidden');
+  document.getElementById('final-score-text').textContent = `You correctly sorted ${gameScore} items!`;
+  const earned = gameScore * 5;
+  earnedPtsDisplay.textContent = earned;
+  
+  // Add global Eco-Points
+  if (earned > 0) {
+     let tempScore = parseInt(localStorage.getItem('ecoScore')) || 0;
+     localStorage.setItem('ecoScore', tempScore + earned);
+     document.getElementById('score-display').textContent = tempScore + earned;
+  }
+}
+
+// Bins handling
+document.querySelectorAll('.game-bin-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (gameLives <= 0 || !currentItemKey) return;
+    clearInterval(gameTimer);
+    
+    const selectedType = btn.getAttribute('data-type');
+    const actualType = wasteDatabase[currentItemKey].typeClass;
+    
+    if (selectedType === actualType || (actualType === 'general' && selectedType === 'hazardous')) {
+      // Right!
+      playSuccessSound();
+      showFeedback(getPositiveMessage(), false);
+      gameScore++;
+      updateGameHeader();
+      trackSort(wasteDatabase[currentItemKey].category);
+      setTimeout(nextItem, 800);
+    } else {
+      // Wrong!
+      playErrorSound();
+      showFeedback(getNegativeMessage(), true);
+      loseLife();
+    }
+  });
+});
+
+function showFeedback(text, isError) {
+  gameFeedback.textContent = text;
+  gameFeedback.classList.remove('hidden', 'error');
+  if (isError) {
+    gameFeedback.classList.add('error');
+    itemContainer.classList.add('anim-explode');
+  } else {
+    itemContainer.classList.add('anim-celebrate');
+  }
+  
+  // Restart popIn animation
+  gameFeedback.style.animation = 'none';
+  gameFeedback.offsetHeight; 
+  gameFeedback.style.animation = 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+  
+  setTimeout(() => {
+    gameFeedback.classList.add('hidden');
+    itemContainer.classList.remove('anim-explode', 'anim-celebrate');
+  }, 800);
+}
+
+function getPositiveMessage() {
+  const msgs = ["ECO-WARRIOR!", "NICE!", "PERFECT!", "BINGO!", "SWOOSH!"];
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+function getNegativeMessage() {
+  const msgs = ["YUCK!", "TOXIC!", "NOPE!", "EWW!", "YIKES!"];
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}

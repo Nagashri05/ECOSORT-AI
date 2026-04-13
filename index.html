@@ -25,6 +25,9 @@
       </div>
       
       <div class="header-controls">
+        <button id="dashboard-btn" class="theme-btn" title="Impact Dashboard">
+          <i class="ph-fill ph-chart-bar"></i>
+        </button>
         <div class="eco-score-badge" title="Your Eco-Points">
           <i class="ph-fill ph-trophy"></i>
           <span id="score-display">0</span> pts
@@ -64,6 +67,13 @@
         <span class="suggestion-chip" onclick="setInput('Coffee grounds')">Coffee grounds</span>
         <span class="suggestion-chip" onclick="setInput('Clothing')">Clothing</span>
       </div>
+
+      <!-- Play Game Button -->
+      <div class="game-launch-container">
+        <button id="launch-game-btn" class="primary-btn game-btn">
+          <i class="ph-fill ph-game-controller"></i> Play Trash Dash!
+        </button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -86,6 +96,115 @@
       <p>Supporting <strong>Sustainable Development Goal 12</strong>: Responsible Consumption and Production</p>
     </div>
   </footer>
+
+  <!-- Impact Dashboard Modal -->
+  <div id="dashboard-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <button class="close-modal-btn" id="close-dashboard"><i class="ph-bold ph-x"></i></button>
+      <h2><i class="ph-fill ph-chart-line-up"></i> Your Impact Dashboard</h2>
+      
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-icon recyclable-icon"><i class="ph-fill ph-recycle"></i></div>
+          <div class="stat-value" id="stat-recyclable">0</div>
+          <div class="stat-label">Recycled</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon organic-icon"><i class="ph-fill ph-leaf"></i></div>
+          <div class="stat-value" id="stat-organic">0</div>
+          <div class="stat-label">Composted</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon hazardous-icon"><i class="ph-fill ph-warning-circle"></i></div>
+          <div class="stat-value" id="stat-hazardous">0</div>
+          <div class="stat-label">Safely Disposed</div>
+        </div>
+      </div>
+
+      <div class="badges-section">
+        <h3><i class="ph-fill ph-medal"></i> Badges</h3>
+        <div class="badges-grid" id="badges-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Challenge Modal -->
+  <div id="challenge-modal" class="modal-overlay hidden">
+    <div class="modal-content challenge-content">
+      <button class="close-modal-btn" id="close-challenge"><i class="ph-bold ph-x"></i></button>
+      <div class="challenge-icon-wrapper">
+        <i class="ph-fill ph-star"></i>
+      </div>
+      <h2>Daily Eco-Challenge!</h2>
+      <p id="daily-challenge-text">Your challenge goes here.</p>
+      <div class="challenge-reward">Reward: <span>+50 pts</span></div>
+      <button id="accept-challenge-btn" class="primary-btn">I completed this!</button>
+    </div>
+  </div>
+
+  <!-- Trash Dash Game Modal -->
+  <div id="game-modal" class="modal-overlay hidden">
+    <div class="modal-content game-content">
+      <button class="close-modal-btn" id="close-game"><i class="ph-bold ph-x"></i></button>
+      
+      <div class="game-header">
+        <div class="game-score">Score: <span id="game-score-display">0</span></div>
+        <div class="game-lives">
+          <i class="ph-fill ph-heart heart-active" id="life-1"></i>
+          <i class="ph-fill ph-heart heart-active" id="life-2"></i>
+          <i class="ph-fill ph-heart heart-active" id="life-3"></i>
+        </div>
+      </div>
+
+      <div class="game-play-area">
+        <div class="timer-bar-container">
+          <div class="timer-bar" id="game-timer-bar"></div>
+        </div>
+        
+        <div class="falling-item" id="falling-item">
+          <i class="ph-fill ph-question" id="game-item-icon"></i>
+          <h2 id="game-item-name">Ready?</h2>
+        </div>
+        
+        <div class="funny-feedback hidden" id="game-feedback">
+          ECO-WARRIOR!
+        </div>
+      </div>
+
+      <div class="game-controls">
+        <button class="game-bin-btn recyclable" data-type="recyclable">
+          <i class="ph-fill ph-recycle"></i>
+          <span>Recycle</span>
+        </button>
+        <button class="game-bin-btn organic" data-type="organic">
+          <i class="ph-fill ph-leaf"></i>
+          <span>Compost</span>
+        </button>
+        <button class="game-bin-btn hazardous" data-type="hazardous">
+          <i class="ph-fill ph-warning-circle"></i>
+          <span>Hazard</span>
+        </button>
+      </div>
+      
+      <div id="game-start-overlay" class="game-overlay">
+        <h2><i class="ph-fill ph-game-controller"></i> Trash Dash!</h2>
+        <p>Sort the trash into the correct bin before time runs out. 3 mistakes and it's game over!</p>
+        <button id="start-game-btn" class="primary-btn">Start Dash</button>
+        <button class="secondary-btn quit-game-btn" style="margin-top: 1rem;">Back to Home</button>
+      </div>
+      
+      <div id="game-over-overlay" class="game-overlay hidden">
+        <h2>Game Over</h2>
+        <p id="final-score-text">You sorted 0 items!</p>
+        <div class="challenge-reward">+<span id="earned-pts">0</span> Eco-Pts</div>
+        <button id="restart-game-btn" class="primary-btn">Play Again</button>
+        <button class="secondary-btn quit-game-btn" style="margin-top: 1rem;">Back to Home</button>
+      </div>
+
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
