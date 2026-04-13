@@ -605,3 +605,117 @@ footer {
 .shake {
   animation: shake 0.4s ease-in-out;
 }
+
+/* Responsive Design for Tablets and Mobile Devices */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 3rem;
+  }
+  .container {
+    padding: 1.5rem;
+  }
+  .search-container {
+    padding: 0.4rem;
+  }
+  button#search-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+  input[type="text"] {
+    padding: 0.8rem;
+    font-size: 1rem;
+  }
+  .search-icon {
+    margin-left: 0.8rem;
+  }
+}
+
+/* Responsive Design specific for Android Phones and smaller devices */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2.2rem;
+  }
+  .container {
+    padding: 1rem;
+  }
+  header {
+    padding-bottom: 1.5rem;
+  }
+  .logo {
+    font-size: 1.25rem;
+  }
+  .eco-score-badge {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+  .theme-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 1.1rem;
+  }
+  .hero-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+  }
+  .fact-container {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    margin: 1rem auto 1.5rem auto;
+  }
+  .search-icon {
+    display: none;
+  }
+  input[type="text"] {
+    padding: 0.8rem 0.6rem;
+    font-size: 0.95rem;
+  }
+  button#search-btn {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.95rem;
+  }
+  .camera-btn {
+    font-size: 1.3rem;
+    margin-right: 0.2rem;
+  }
+  .suggestions {
+    gap: 0.5rem;
+  }
+  .suggestion-chip {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  .card {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+  .icon-wrapper {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  .category {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+  }
+  .item-name {
+    font-size: 1.1rem;
+  }
+  .info-box {
+    padding: 1rem;
+  }
+  .diy-idea {
+    padding: 1.2rem;
+  }
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.8rem;
+  }
+  .blob-1, .blob-2, .blob-3 {
+    width: 250px;
+    height: 250px;
+    filter: blur(50px);
+  }
+}
