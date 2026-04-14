@@ -7,6 +7,8 @@
   <meta name="description" content="EcoSort AI instantly identifies whether your waste is recyclable, organic, or hazardous, providing decomposition timelines and DIY craft ideas.">
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#10B981">
   <!-- Phosphor Icons for aesthetic icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
@@ -25,6 +27,16 @@
       </div>
       
       <div class="header-controls">
+        <button id="auth-btn" class="theme-btn" title="Sign In / Register">
+          <i class="ph-fill ph-user"></i>
+        </button>
+        <div id="user-profile-btn" class="user-profile hidden">
+          <i class="ph-fill ph-user-check"></i>
+          <span id="current-username-display"></span>
+          <button id="signout-btn" class="signout-btn" title="Sign Out">
+            <i class="ph-bold ph-sign-out"></i>
+          </button>
+        </div>
         <button id="rural-toggle" class="rural-mode-btn" title="Switch between Urban & Rural modes">
           <i class="ph-fill ph-buildings" id="mode-icon"></i>
           <span id="mode-text">Urban Mode</span>
@@ -207,6 +219,61 @@
         <button class="secondary-btn quit-game-btn" style="margin-top: 1rem;">Back to Home</button>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Authentication Modal -->
+  <div id="auth-modal" class="modal-overlay hidden">
+    <div class="modal-content auth-content">
+      <button class="close-modal-btn" id="close-auth"><i class="ph-bold ph-x"></i></button>
+      
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login">Sign In</button>
+        <button class="auth-tab" id="tab-register">Sign Up</button>
+      </div>
+
+      <div id="auth-form-container">
+        <!-- Form elements managed by JS -->
+        <h2 id="auth-title">Welcome Back!</h2>
+        <div class="input-group">
+          <i class="ph-fill ph-user"></i>
+          <input type="text" id="auth-username" placeholder="Username" autocomplete="off">
+        </div>
+        <div class="input-group">
+          <i class="ph-fill ph-lock-key"></i>
+          <input type="password" id="auth-password" placeholder="Password">
+        </div>
+        <p id="auth-error-msg" class="error-msg hidden">Invalid credentials.</p>
+        <button id="auth-submit-btn" class="primary-btn submit-btn">Sign In</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Facility Map Modal -->
+  <div id="map-modal" class="modal-overlay hidden">
+    <div class="modal-content map-content">
+      <button class="close-modal-btn" id="close-map"><i class="ph-bold ph-x"></i></button>
+      <h2><i class="ph-fill ph-map-pin"></i> Nearest Facilities</h2>
+      <div class="map-placeholder">
+        <i class="ph-fill ph-map-trifold"></i>
+        <p>Interactive Map coming soon...</p>
+      </div>
+      <div class="facility-list">
+        <div class="facility-item">
+          <div class="fac-details">
+            <h4>City Recycling Center #4</h4>
+            <p>2.4 km away • Open until 6 PM</p>
+          </div>
+          <button class="primary-btn small-btn">Directions</button>
+        </div>
+        <div class="facility-item">
+          <div class="fac-details">
+            <h4>Green Earth E-Waste Dropoff</h4>
+            <p>5.1 km away • Open 24/7</p>
+          </div>
+          <button class="primary-btn small-btn">Directions</button>
+        </div>
+      </div>
     </div>
   </div>
 

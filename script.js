@@ -641,7 +641,12 @@ function getQuickActions(data, isRural) {
   if (isRural) {
     // Rural Mode Logic
     if (data.scrapValue) {
-      actions.push({ icon: 'ph-fill ph-money scrap', text: 'Sell to scrap dealer', subtext: 'Approx value: ' + data.scrapValue });
+      actions.push({ 
+        icon: 'ph-fill ph-money scrap', 
+        text: 'Sell to scrap dealer', 
+        subtext: 'Approx value: ' + data.scrapValue,
+        actionHtml: '<button class="qa-action-btn call-btn" onclick="alert(\'Calling Local Kabadiwala...\\\\nRouting to +91-XXXXX-XXXXX\')"><i class="ph-fill ph-phone-call"></i> Call Kabadiwala</button>'
+      });
     }
     
     if (data.typeClass === 'organic') {
@@ -659,15 +664,30 @@ function getQuickActions(data, isRural) {
   } else {
     // Urban Mode Logic
     if (data.typeClass === 'recyclable') {
-      actions.push({ icon: 'ph-fill ph-recycle general', text: 'Recycling Center / Bin', subtext: 'Rinse properly before tossing' });
+      actions.push({ 
+        icon: 'ph-fill ph-recycle general', 
+        text: 'Recycling Center / Bin', 
+        subtext: 'Rinse properly before tossing',
+        actionHtml: '<button class="qa-action-btn map-btn" onclick="document.getElementById(\\\'map-modal\\\').classList.remove(\\\'hidden\\\')"><i class="ph-fill ph-map-pin"></i> Locate Drop-off</button>'
+      });
       if (data.scrapValue) {
-        actions.push({ icon: 'ph-fill ph-money scrap', text: 'Sell to scrap dealer', subtext: 'Approx value: ' + data.scrapValue });
+        actions.push({ 
+          icon: 'ph-fill ph-money scrap', 
+          text: 'Sell to scrap dealer', 
+          subtext: 'Approx value: ' + data.scrapValue,
+          actionHtml: '<button class="qa-action-btn call-btn" onclick="alert(\'Calling Local Kabadiwala...\\\\nRouting to +91-XXXXX-XXXXX\')"><i class="ph-fill ph-phone-call"></i> Call Kabadiwala</button>'
+        });
       }
     } else if (data.typeClass === 'organic') {
       actions.push({ icon: 'ph-fill ph-leaf general', text: 'Green / Wet Waste Bin', subtext: 'Municipal collection' });
       actions.push({ icon: 'ph-fill ph-plant general', text: 'Home Compost', subtext: 'Great for your plants' });
     } else if (data.typeClass === 'hazardous') {
-      actions.push({ icon: 'ph-fill ph-warning-circle warning', text: 'Hazardous Waste Facility', subtext: 'E-waste / Medical drop-off' });
+      actions.push({ 
+        icon: 'ph-fill ph-warning-circle warning', 
+        text: 'Hazardous Waste Facility', 
+        subtext: 'E-waste / Medical drop-off',
+        actionHtml: '<button class="qa-action-btn map-btn" onclick="document.getElementById(\\\'map-modal\\\').classList.remove(\\\'hidden\\\')"><i class="ph-fill ph-map-pin"></i> Locate Drop-off</button>'
+      });
       if (data.scrapValue) {
         actions.push({ icon: 'ph-fill ph-money scrap', text: 'Sell to e-waste scrap', subtext: 'Approx value: ' + data.scrapValue });
       }
@@ -692,13 +712,18 @@ function displayResult(searchedTerm, data) {
           <div class="qa-icon">
             <i class="${action.icon}"></i>
           </div>
-          <div class="qa-content">
+          <div class="qa-content" style="flex: 1;">
             <span class="qa-text">${action.text}</span>
             <span class="qa-subtext">${action.subtext}</span>
+            ${action.actionHtml ? action.actionHtml : ''}
           </div>
         </div>
       `;
     });
+    // Append the universal audio listener button if we have actions
+    if (isRuralMode) {
+      actionsHtml += `<button class="audio-btn" onclick="triggerAudio()"><i class="ph-fill ph-speaker-high"></i> Listen to Instructions</button>`;
+    }
     actionsHtml += '</div>';
   } else if (data.category === 'Unknown') {
     actionsHtml = `
@@ -1153,4 +1178,200 @@ function getPositiveMessage() {
 function getNegativeMessage() {
   const msgs = ["YUCK!", "TOXIC!", "NOPE!", "EWW!", "YIKES!"];
   return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+// --- User Authentication System ---
+
+const authBtn = document.getElementById('auth-btn');
+const userProfileBtn = document.getElementById('user-profile-btn');
+const currentUsernameDisplay = document.getElementById('current-username-display');
+const signoutBtn = document.getElementById('signout-btn');
+const authModal = document.getElementById('auth-modal');
+const closeAuthBtn = document.getElementById('close-auth');
+const tabLogin = document.getElementById('tab-login');
+const tabRegister = document.getElementById('tab-register');
+const authTitle = document.getElementById('auth-title');
+const authSubmitBtn = document.getElementById('auth-submit-btn');
+const authUsernameInput = document.getElementById('auth-username');
+const authPasswordInput = document.getElementById('auth-password');
+const authErrorMsg = document.getElementById('auth-error-msg');
+
+let isLoginMode = true;
+
+// Mock Database using LocalStorage
+function getAccounts() {
+  return JSON.parse(localStorage.getItem('ecoAccounts')) || {};
+}
+
+function saveAccount(username, password) {
+  const accounts = getAccounts();
+  accounts[username] = { password, score: 0 };
+  localStorage.setItem('ecoAccounts', JSON.stringify(accounts));
+}
+
+function checkCredentials(username, password) {
+  const accounts = getAccounts();
+  return accounts[username] && accounts[username].password === password;
+}
+
+// Session Management
+let currentUser = localStorage.getItem('currentUser');
+
+function updateAuthUI() {
+  if (currentUser) {
+    authBtn.classList.add('hidden');
+    userProfileBtn.classList.remove('hidden');
+    currentUsernameDisplay.textContent = currentUser;
+    
+    // Load their specific score
+    const accounts = getAccounts();
+    if (accounts[currentUser] && typeof accounts[currentUser].score !== 'undefined') {
+      currentScore = accounts[currentUser].score;
+      localStorage.setItem('ecoScore', currentScore); 
+      scoreDisplay.textContent = currentScore;
+    }
+  } else {
+    authBtn.classList.remove('hidden');
+    userProfileBtn.classList.add('hidden');
+    currentUsernameDisplay.textContent = '';
+    
+    // Reset to generic score
+    currentScore = 0;
+    localStorage.setItem('ecoScore', 0);
+    scoreDisplay.textContent = '0';
+  }
+}
+
+// Override original addScore to also save to account
+const originalAddScore = addScore;
+addScore = function() {
+  originalAddScore(); 
+  if (currentUser) {
+    const accounts = getAccounts();
+    if (accounts[currentUser]) {
+      accounts[currentUser].score = currentScore;
+      localStorage.setItem('ecoAccounts', JSON.stringify(accounts));
+    }
+  }
+}
+
+// Init UI securely on start
+updateAuthUI();
+
+// Event Listeners for UI
+authBtn.addEventListener('click', () => {
+  authModal.classList.remove('hidden');
+  authErrorMsg.classList.add('hidden');
+  authUsernameInput.value = '';
+  authPasswordInput.value = '';
+});
+
+closeAuthBtn.addEventListener('click', () => {
+  authModal.classList.add('hidden');
+});
+
+signoutBtn.addEventListener('click', () => {
+  localStorage.removeItem('currentUser');
+  currentUser = null;
+  updateAuthUI();
+});
+
+tabLogin.addEventListener('click', () => {
+  isLoginMode = true;
+  tabLogin.classList.add('active');
+  tabRegister.classList.remove('active');
+  authTitle.textContent = 'Welcome Back!';
+  authSubmitBtn.textContent = 'Sign In';
+  authErrorMsg.classList.add('hidden');
+});
+
+tabRegister.addEventListener('click', () => {
+  isLoginMode = false;
+  tabRegister.classList.add('active');
+  tabLogin.classList.remove('active');
+  authTitle.textContent = 'Create Account';
+  authSubmitBtn.textContent = 'Sign Up';
+  authErrorMsg.classList.add('hidden');
+});
+
+authSubmitBtn.addEventListener('click', () => {
+  const user = authUsernameInput.value.trim();
+  const pass = authPasswordInput.value.trim();
+  
+  if (!user || !pass) {
+    authErrorMsg.textContent = 'Please fill in all fields.';
+    authErrorMsg.classList.remove('hidden');
+    return;
+  }
+  
+  if (isLoginMode) {
+    // Login flow
+    if (checkCredentials(user, pass)) {
+       currentUser = user;
+       localStorage.setItem('currentUser', user);
+       authModal.classList.add('hidden');
+       updateAuthUI();
+    } else {
+       authErrorMsg.textContent = 'Invalid username or password.';
+       authErrorMsg.classList.remove('hidden');
+    }
+  } else {
+    // Registration flow
+    const accounts = getAccounts();
+    if (accounts[user]) {
+       authErrorMsg.textContent = 'Username already taken.';
+       authErrorMsg.classList.remove('hidden');
+    } else {
+       saveAccount(user, pass);
+       currentUser = user;
+       localStorage.setItem('currentUser', user);
+       authModal.classList.add('hidden');
+       updateAuthUI();
+    }
+  }
+});
+
+// --- Service Worker Registration ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then((registration) => {
+      console.log('ServiceWorker registration successful');
+    }, (err) => {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  });
+}
+
+// --- Facility Map Logic ---
+const mapModal = document.getElementById('map-modal');
+const closeMapBtn = document.getElementById('close-map');
+if (closeMapBtn) {
+  closeMapBtn.addEventListener('click', () => {
+    mapModal.classList.add('hidden');
+  });
+}
+
+// --- Audio Assistant (TTS) ---
+function playAudioAssistant(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9; 
+    window.speechSynthesis.speak(utterance);
+  } else {
+    alert("Sorry, your browser doesn't support text to speech!");
+  }
+}
+
+window.triggerAudio = function() {
+  const container = document.querySelector('.quick-actions');
+  if(!container) return;
+  let speechRaw = "Here is what you should do: ";
+  const items = container.querySelectorAll('.qa-item');
+  items.forEach(el => {
+     const text = el.querySelector('.qa-text')?.textContent || '';
+     const subtext = el.querySelector('.qa-subtext')?.textContent || '';
+     speechRaw += text + ". " + subtext + ". ";
+  });
+  playAudioAssistant(speechRaw);
 }
