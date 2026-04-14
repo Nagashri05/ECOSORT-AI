@@ -10,6 +10,7 @@ const wasteDatabase = {
     tip: 'Recycle properly. Rinse out to ensure it gets recycled.',
     decompositionTime: '450 years',
     reuseIdea: 'Cut in half and paint it to create a self-watering planter or hanging garden pot.'
+   
   },
   'plastic bag': {
     aliases: ['polythene', 'grocery bag', 'carry bag'],
@@ -464,6 +465,15 @@ const loaderText = document.getElementById('loader-text');
 // Init Features
 // 1. Eco Points
 let currentScore = parseInt(localStorage.getItem('ecoScore')) || 0;
+let totalItems = parseInt(localStorage.getItem('itemsSorted')) || 0;
+
+function updateImpact() {
+  totalItems++;
+  localStorage.setItem('itemsSorted', totalItems);
+  document.getElementById('impact-text').textContent =
+    `You saved ${totalItems} items from landfill 🌍`;
+}
+
 const scoreDisplay = document.getElementById('score-display');
 scoreDisplay.textContent = currentScore;
 
@@ -593,6 +603,9 @@ preview.src = URL.createObjectURL(file);
         
         // returns array of {className, probability}
         const predictions = await tfModel.classify(imgTarget); 
+        let confidence = (predictions[0].probability * 100).toFixed(1);
+
+
         console.log("AI Predictions:", predictions);
         
         loaderContainer.classList.remove('show');
@@ -618,11 +631,11 @@ preview.src = URL.createObjectURL(file);
           if (foundCategory) {
             addScore(); // Reward points
             searchInput.value = matchedTerm;
-            displayResult(`AI Detected: ${matchedTerm}`, wasteDatabase[foundCategory]);
+            displayResult(`AI Detected: ${matchedTerm} (${confidence}% confidence)`, wasteDatabase[foundCategory]);
           } else {
              // Fallback if none of the top 3 predictions are natively found
              searchInput.value = predictions[0].className.split(',')[0];
-             displayResult(`AI Detected: ${searchInput.value}`, {
+             displayResult(`AI Detected: ${searchInput.value} (${confidence}% confidence)`, {
               category: 'Unknown',
               typeClass: 'general',
               icon: 'ph-question',
@@ -725,7 +738,28 @@ function classifyWaste() {
       let foundKey = findBestMatch(query);
       if (foundKey) {
         addScore(); // Reward points on successful finding
+        updateImpact();
         displayResult(query, wasteDatabase[foundKey]);
+        setTimeout(() => {
+  const card = document.querySelector('.card');
+  if (card) {
+    const btn = document.createElement('button');
+    btn.textContent = "📍 Find Nearby Recycling Center";
+    btn.style.marginTop = "15px";
+    btn.style.padding = "10px";
+    btn.style.borderRadius = "10px";
+    btn.style.background = "#10B981";
+    btn.style.color = "white";
+    btn.style.border = "none";
+    btn.style.cursor = "pointer";
+
+    btn.onclick = () => {
+      window.open("https://www.google.com/maps/search/recycling+center+near+me");
+    };
+
+    card.appendChild(btn);
+  }
+}, 100);
       } else {
         displayResult(query, {
           category: 'Unknown',
