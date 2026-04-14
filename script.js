@@ -6,6 +6,7 @@ const wasteDatabase = {
     category: 'Recyclable ♻️',
     typeClass: 'recyclable',
     icon: 'ph-recycle',
+    scrapValue: '₹10-15 per kg',
     tip: 'Recycle properly. Rinse out to ensure it gets recycled.',
     decompositionTime: '450 years',
     reuseIdea: 'Cut in half and paint it to create a self-watering planter or hanging garden pot.'
@@ -60,6 +61,7 @@ const wasteDatabase = {
     category: 'Recyclable ♻️',
     typeClass: 'recyclable',
     icon: 'ph-newspaper',
+    scrapValue: '₹12-15 per kg',
     tip: 'Recycle paper. Keep dry.',
     decompositionTime: '2-6 weeks',
     reuseIdea: 'Use for papier-mâché crafts, origami, or as eco-friendly window-cleaning rags.'
@@ -69,6 +71,7 @@ const wasteDatabase = {
     category: 'Recyclable ♻️',
     typeClass: 'recyclable',
     icon: 'ph-package',
+    scrapValue: '₹8-10 per kg',
     tip: 'Recycle cardboard. Flatten boxes to save space.',
     decompositionTime: '2 months',
     reuseIdea: 'Build a cat scratcher, drawer dividers, or an epic cardboard fort for kids.'
@@ -78,6 +81,7 @@ const wasteDatabase = {
     category: 'Recyclable ♻️',
     typeClass: 'recyclable',
     icon: 'ph-file-text',
+    scrapValue: '₹10-12 per kg',
     tip: 'Keep dry and recycle.',
     decompositionTime: '2-6 weeks',
     reuseIdea: 'Shred it for compost carbon layers, or blend it into a pulp to make your own handmade paper.'
@@ -177,6 +181,8 @@ const wasteDatabase = {
     category: 'Hazardous ⚠️',
     typeClass: 'hazardous',
     icon: 'ph-battery-warning',
+    isHazardousSmoke: true,
+    scrapValue: '₹30-50 per kg',
     tip: 'E-waste disposal. Do not put in regular trash.',
     decompositionTime: '100+ years',
     reuseIdea: 'Cannot be safely reused at home. Always recycle properly at e-waste centers.'
@@ -186,6 +192,8 @@ const wasteDatabase = {
     category: 'Hazardous ⚠️',
     typeClass: 'hazardous',
     icon: 'ph-device-mobile',
+    isHazardousSmoke: true,
+    scrapValue: '₹100-500 depending on model',
     tip: 'E-waste center.',
     decompositionTime: '1000+ years',
     reuseIdea: 'Wipe the data and keep it as a dedicated Wi-Fi music player, smart home remote, or baby monitor.'
@@ -195,6 +203,8 @@ const wasteDatabase = {
     category: 'Hazardous ⚠️',
     typeClass: 'hazardous',
     icon: 'ph-laptop',
+    isHazardousSmoke: true,
+    scrapValue: '₹500-2000 depending on parts',
     tip: 'E-waste center.',
     decompositionTime: '1000+ years',
     reuseIdea: 'Install a lightweight Linux OS (like ChromeOS Flex) to revive it for basic web browsing or donate it to student charities.'
@@ -258,6 +268,7 @@ const wasteDatabase = {
     category: 'Recyclable ♻️',
     typeClass: 'recyclable',
     icon: 'ph-cylinder',
+    scrapValue: '₹80-100 per kg',
     tip: 'Recycle metal.',
     decompositionTime: '200 years',
     reuseIdea: 'Carefully cut and bend to make wind chimes, small lanterns, or decorative pen holders.'
@@ -267,6 +278,7 @@ const wasteDatabase = {
     category: 'Recyclable ♻️',
     typeClass: 'recyclable',
     icon: 'ph-cylinder',
+    scrapValue: '₹20-30 per kg',
     tip: 'Recycle metal.',
     decompositionTime: '50 years',
     reuseIdea: 'Remove the label, clean, and map holes to make a beautiful outdoor candle lantern.'
@@ -294,6 +306,7 @@ const wasteDatabase = {
     category: 'Hazardous ⚠️',
     typeClass: 'hazardous',
     icon: 'ph-trash',
+    isHazardousSmoke: true,
     tip: 'Dispose properly in dry trash.',
     decompositionTime: '100+ years',
     reuseIdea: 'Weave multiple colorful wrappers together into interesting bracelets or wallets.'
@@ -339,6 +352,7 @@ const wasteDatabase = {
     category: 'Recyclable ♻️',
     typeClass: 'recyclable',
     icon: 'ph-t-shirt',
+    scrapValue: 'Exchange for utensils/cash',
     tip: 'Donate or reuse.',
     decompositionTime: '1-5 months',
     reuseIdea: 'Sew old t-shirts together to make a nostalgic patchwork quilt, or turn old jeans into cutoff shorts.'
@@ -485,6 +499,37 @@ themeToggle.addEventListener('click', () => {
   }
 });
 
+// 2.5 Rural Mode Toggle
+const ruralToggle = document.getElementById('rural-toggle');
+const ruralIcon = document.getElementById('mode-icon');
+const ruralText = document.getElementById('mode-text');
+let isRuralMode = localStorage.getItem('ruralMode') === 'true';
+
+function updateRuralUI() {
+  if (isRuralMode) {
+    ruralToggle.classList.add('rural-active');
+    ruralIcon.classList.replace('ph-buildings', 'ph-map-pin');
+    ruralText.textContent = 'Rural Mode';
+  } else {
+    ruralToggle.classList.remove('rural-active');
+    ruralIcon.classList.replace('ph-map-pin', 'ph-buildings');
+    ruralText.textContent = 'Urban Mode';
+  }
+}
+
+updateRuralUI();
+
+ruralToggle.addEventListener('click', () => {
+  isRuralMode = !isRuralMode;
+  localStorage.setItem('ruralMode', isRuralMode);
+  updateRuralUI();
+  
+  // If a result is currently shown, re-trigger classification to update UI instantly
+  if (!document.getElementById('result-container').classList.contains('hidden') && searchInput.value.trim() !== '') {
+    classifyWaste();
+  }
+});
+
 // 3. Random Daily Fact
 document.getElementById('fact-text').textContent = ecoFacts[Math.floor(Math.random() * ecoFacts.length)];
 
@@ -531,7 +576,7 @@ imageUpload.addEventListener('change', (e) => {
         addScore(); // Reward points
         displayResult("AI Upload Detection", wasteDatabase[randomKey]);
       }, 300);
-    }, 2500);
+    }, 5000);
     
     imageUpload.value = '';
   }
@@ -579,11 +624,91 @@ function classifyWaste() {
         });
       }
     }, 300); 
-  }, 1000); 
+  }, 3500); 
+}
+
+// Smart Quick Actions Logic
+function getQuickActions(data, isRural) {
+  let actions = [];
+  
+  if (data.category === 'Unknown') return actions;
+
+  // Base check for hazardous smoke warning
+  if (data.isHazardousSmoke) {
+    actions.push({ icon: 'ph-fill ph-fire warning', text: 'Do NOT burn', subtext: 'Produces extremely toxic smoke' });
+  }
+
+  if (isRural) {
+    // Rural Mode Logic
+    if (data.scrapValue) {
+      actions.push({ icon: 'ph-fill ph-money scrap', text: 'Sell to scrap dealer', subtext: 'Approx value: ' + data.scrapValue });
+    }
+    
+    if (data.typeClass === 'organic') {
+      actions.push({ icon: 'ph-fill ph-plant general', text: 'Compost at home', subtext: 'Very practical in villages' });
+      actions.push({ icon: 'ph-fill ph-users general', text: 'Village waste pit', subtext: 'If segregated cleanly' });
+    } else if (data.typeClass === 'recyclable') {
+      actions.push({ icon: 'ph-fill ph-recycle general', text: 'Reuse at home', subtext: 'See DIY idea below' });
+      actions.push({ icon: 'ph-fill ph-package general', text: 'Store safely', subtext: 'Until community collection day' });
+    } else if (data.typeClass === 'hazardous') {
+      actions.push({ icon: 'ph-fill ph-warning-circle warning', text: 'Store safely', subtext: 'Keep away from children/animals' });
+      actions.push({ icon: 'ph-fill ph-truck warning', text: 'Give to scrap collector', subtext: 'Or community collection' });
+    } else {
+      actions.push({ icon: 'ph-fill ph-info general', text: 'Store safely', subtext: 'Wait for proper disposal option' });
+    }
+  } else {
+    // Urban Mode Logic
+    if (data.typeClass === 'recyclable') {
+      actions.push({ icon: 'ph-fill ph-recycle general', text: 'Recycling Center / Bin', subtext: 'Rinse properly before tossing' });
+      if (data.scrapValue) {
+        actions.push({ icon: 'ph-fill ph-money scrap', text: 'Sell to scrap dealer', subtext: 'Approx value: ' + data.scrapValue });
+      }
+    } else if (data.typeClass === 'organic') {
+      actions.push({ icon: 'ph-fill ph-leaf general', text: 'Green / Wet Waste Bin', subtext: 'Municipal collection' });
+      actions.push({ icon: 'ph-fill ph-plant general', text: 'Home Compost', subtext: 'Great for your plants' });
+    } else if (data.typeClass === 'hazardous') {
+      actions.push({ icon: 'ph-fill ph-warning-circle warning', text: 'Hazardous Waste Facility', subtext: 'E-waste / Medical drop-off' });
+      if (data.scrapValue) {
+        actions.push({ icon: 'ph-fill ph-money scrap', text: 'Sell to e-waste scrap', subtext: 'Approx value: ' + data.scrapValue });
+      }
+    } else {
+      actions.push({ icon: 'ph-fill ph-trash general', text: 'General Dry Waste', subtext: 'Municipal bin' });
+    }
+  }
+  
+  return actions;
 }
 
 // Render Result Card
 function displayResult(searchedTerm, data) {
+  const quickActions = getQuickActions(data, isRuralMode);
+  
+  let actionsHtml = '';
+  if (quickActions.length > 0) {
+    actionsHtml = '<div class="quick-actions">';
+    quickActions.forEach(action => {
+      actionsHtml += `
+        <div class="qa-item">
+          <div class="qa-icon">
+            <i class="${action.icon}"></i>
+          </div>
+          <div class="qa-content">
+            <span class="qa-text">${action.text}</span>
+            <span class="qa-subtext">${action.subtext}</span>
+          </div>
+        </div>
+      `;
+    });
+    actionsHtml += '</div>';
+  } else if (data.category === 'Unknown') {
+    actionsHtml = `
+      <div class="info-box tip" style="margin-bottom: 1.5rem; width: 100%;">
+        <h3><i class="ph-fill ph-info"></i> Disposal Guide</h3>
+        <p>${data.tip}</p>
+      </div>
+    `;
+  }
+
   resultContainer.innerHTML = `
     <div class="card ${data.typeClass}">
       <div class="icon-wrapper">
@@ -592,13 +717,11 @@ function displayResult(searchedTerm, data) {
       <div class="item-name">Result for "${searchedTerm}"</div>
       <div class="category">${data.category}</div>
       
+      ${actionsHtml}
+      
       <div class="info-grid">
-        <div class="info-box tip">
-          <h3><i class="ph-fill ph-info"></i> Disposal Guide</h3>
-          <p>${data.tip}</p>
-        </div>
-        <div class="info-box decomp">
-          <h3><i class="ph-fill ph-hourglass-high"></i> Decomposition</h3>
+        <div class="info-box decomp" style="grid-column: 1 / -1;">
+          <h3><i class="ph-fill ph-hourglass-high"></i> Decomposition Time</h3>
           <p>${data.decompositionTime}</p>
         </div>
       </div>

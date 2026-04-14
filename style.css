@@ -182,6 +182,112 @@ header {
   background: rgba(16, 185, 129, 0.1);
 }
 
+.rural-mode-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-dark);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 100px;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.rural-mode-btn:hover {
+  background: rgba(14, 165, 233, 0.1);
+  transform: scale(1.05);
+}
+
+.rural-mode-btn i {
+  font-size: 1.25rem;
+  color: var(--secondary);
+}
+
+.rural-mode-btn.rural-active {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(217, 119, 6, 0.15));
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+.rural-mode-btn.rural-active i {
+  color: #d97706;
+}
+
+/* Quick Actions List */
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.qa-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 1rem 1.2rem;
+  border-radius: 16px;
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.qa-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.qa-item .qa-icon {
+  font-size: 1.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 0.6rem;
+  border-radius: 50%;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qa-item .qa-icon.warning {
+  color: var(--hazardous);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.qa-item .qa-icon.scrap {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.qa-item .qa-icon.general {
+  color: var(--general);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.qa-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.qa-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.qa-subtext {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 0.2rem;
+}
+
 /* Hero Section */
 .hero {
   text-align: center;

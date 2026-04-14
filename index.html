@@ -25,6 +25,10 @@
       </div>
       
       <div class="header-controls">
+        <button id="rural-toggle" class="rural-mode-btn" title="Switch between Urban & Rural modes">
+          <i class="ph-fill ph-buildings" id="mode-icon"></i>
+          <span id="mode-text">Urban Mode</span>
+        </button>
         <button id="dashboard-btn" class="theme-btn" title="Impact Dashboard">
           <i class="ph-fill ph-chart-bar"></i>
         </button>
@@ -56,7 +60,7 @@
         <label for="image-upload" class="camera-btn" title="Upload an image to identify">
           <i class="ph-fill ph-camera"></i>
         </label>
-        <input type="file" id="image-upload" accept="image/*" class="hidden-input">
+        <input type="file" id="image-upload" accept="image/*" capture="environment" class="hidden-input">
         
         <button id="search-btn">Analyze</button>
       </div>
