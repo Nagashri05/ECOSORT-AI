@@ -549,38 +549,151 @@ function findBestMatch(query) {
   return null;
 }
 
-// 4. Image Upload "AI Vision" Mockup
+// 4. Real Image Upload "AI Vision" (TensorFlow.js)
+let tfModel = null;
+
+async function loadTFModel() {
+  if (!tfModel) {
+    loaderText.textContent = "Loading AI Vision Model... (may take a moment on first run)";
+    try {
+      tfModel = await mobilenet.load();
+    } catch(err) {
+      console.error(err);
+      loaderText.textContent = "Failed to load AI model.";
+    }
+  }
+}
+
 const imageUpload = document.getElementById('image-upload');
-imageUpload.addEventListener('change', (e) => {
+const preview = document.getElementById('preview');
+imageUpload.addEventListener('change', async (e) => {
   if (e.target.files && e.target.files[0]) {
     const file = e.target.files[0];
-    searchInput.value = "Imagined Image: " + file.name;
+    // Show preview image
+preview.style.display = "block";
+preview.src = URL.createObjectURL(file);
     
     // UI Flow
     resultContainer.classList.remove('show');
     resultContainer.classList.add('hidden');
-    loaderText.textContent = "AI Vision processing image...";
+    loaderText.textContent = "Preparing AI Vision pipeline...";
     loaderContainer.classList.remove('hidden');
     setTimeout(() => loaderContainer.classList.add('show'), 50);
 
-    // Simulate AI processing
-    setTimeout(() => {
-      loaderContainer.classList.remove('show');
-      setTimeout(() => {
-        loaderContainer.classList.add('hidden');
+    try {
+      await loadTFModel();
+      if(!tfModel) throw new Error("Model failed to load");
+
+      // We need an HTMLImageElement to classify
+      const imgTarget = new Image();
+      imgTarget.src = URL.createObjectURL(file);
+      
+      imgTarget.onload = async () => {
+        loaderText.textContent = "Analyzing pixels...";
         
-        // Randomly identify
-        const keys = Object.keys(wasteDatabase);
-        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        // returns array of {className, probability}
+        const predictions = await tfModel.classify(imgTarget); 
+        console.log("AI Predictions:", predictions);
         
-        addScore(); // Reward points
-        displayResult("AI Upload Detection", wasteDatabase[randomKey]);
-      }, 300);
-    }, 5000);
+        loaderContainer.classList.remove('show');
+        setTimeout(() => {
+          loaderContainer.classList.add('hidden');
+          
+          let foundCategory = null;
+          let matchedTerm = "";
+          
+          // Iterating MobileNet's predictions to see if any match the EcoSort database
+          for (let p of predictions) {
+            const classNames = p.className.toLowerCase().split(', ');
+            for(let cName of classNames) {
+              foundCategory = findBestMatch(cName);
+              if (foundCategory) {
+                 matchedTerm = cName;
+                 break;
+              }
+            }
+            if(foundCategory) break;
+          }
+          
+          if (foundCategory) {
+            addScore(); // Reward points
+            searchInput.value = matchedTerm;
+            displayResult(`AI Detected: ${matchedTerm}`, wasteDatabase[foundCategory]);
+          } else {
+             // Fallback if none of the top 3 predictions are natively found
+             searchInput.value = predictions[0].className.split(',')[0];
+             displayResult(`AI Detected: ${searchInput.value}`, {
+              category: 'Unknown',
+              typeClass: 'general',
+              icon: 'ph-question',
+              tip: 'The AI detected this object but couldn\'t strongly match it to our waste database. Check local municipal guidelines.',
+              decompositionTime: 'Varies wildly',
+              reuseIdea: 'Check out general upcycling communities online to see if your item has a second life!'
+            });
+          }
+        }, 300);
+      };
+      
+    } catch(err) {
+       console.error("AI Error:", err);
+       loaderContainer.classList.add('hidden');
+       alert("Error processing the image with TensorFlow.js.");
+    }
     
     imageUpload.value = '';
   }
 });
+
+// 5. Voice Assistant (Speech to Text)
+const voiceBtn = document.getElementById('voice-btn');
+if (voiceBtn) {
+  const micIcon = voiceBtn.querySelector('i');
+  
+  // Check browser support for SpeechRecognition
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US'; 
+  
+    recognition.onstart = function() {
+      micIcon.classList.remove('ph-microphone');
+      micIcon.classList.add('ph-speaker-high');
+      micIcon.style.color = 'var(--primary)';
+      searchInput.placeholder = "Listening...";
+    };
+  
+    recognition.onresult = function(event) {
+      const transcript = event.results[0][0].transcript;
+      searchInput.value = transcript;
+      classifyWaste();
+    };
+  
+    recognition.onerror = function(event) {
+      console.error("Speech recognition error", event.error);
+      resetMicUI();
+    };
+  
+    recognition.onend = function() {
+      resetMicUI();
+    };
+  
+    function resetMicUI() {
+      micIcon.classList.remove('ph-speaker-high');
+      micIcon.classList.add('ph-microphone');
+      micIcon.style.color = '';
+      searchInput.placeholder = "e.g., Plastic bottle, banana peel...";
+    }
+  
+    voiceBtn.addEventListener('click', () => {
+      recognition.start();
+    });
+  } else {
+    voiceBtn.style.display = 'none';
+    console.warn('Speech Recognition not supported in this browser.');
+  }
+}
 
 // Search function
 function classifyWaste() {
@@ -1258,6 +1371,24 @@ addScore = function() {
 // Init UI securely on start
 updateAuthUI();
 
+// Auto-show signup if no user is signed in and hasn't explicitly skipped it
+if (!currentUser && !sessionStorage.getItem('guestMode')) {
+  // Slight delay for better UX
+  setTimeout(() => {
+    authModal.classList.remove('hidden');
+    tabRegister.click(); // Default to Sign Up
+  }, 300);
+}
+
+// Handle Continue without Login
+const guestBtn = document.getElementById('guest-btn');
+if (guestBtn) {
+  guestBtn.addEventListener('click', () => {
+    sessionStorage.setItem('guestMode', 'true');
+    authModal.classList.add('hidden');
+  });
+}
+
 // Event Listeners for UI
 authBtn.addEventListener('click', () => {
   authModal.classList.remove('hidden');
@@ -1267,6 +1398,7 @@ authBtn.addEventListener('click', () => {
 });
 
 closeAuthBtn.addEventListener('click', () => {
+  sessionStorage.setItem('guestMode', 'true');
   authModal.classList.add('hidden');
 });
 

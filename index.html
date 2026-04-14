@@ -11,6 +11,10 @@
   <meta name="theme-color" content="#10B981">
   <!-- Phosphor Icons for aesthetic icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- AI Vision Models (TensorFlow.js & MobileNet) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest"></script>
 </head>
 <body data-theme="light">
   <div class="background-elements">
@@ -74,8 +78,19 @@
         </label>
         <input type="file" id="image-upload" accept="image/*" capture="environment" class="hidden-input">
         
+        <!-- Voice Assistant Feature -->
+        <button id="voice-btn" class="camera-btn mic-btn" title="Use Voice Assistant">
+          <i class="ph-fill ph-microphone"></i>
+        </button>
+
         <button id="search-btn">Analyze</button>
       </div>
+
+      <!-- AI Preview + Result -->
+        <div style="text-align:center; margin-top:20px;">
+          <img id="preview" width="200" style="display:none; border-radius:10px;">
+          <p id="result" style="margin-top:10px; font-weight:bold;"></p>
+        </div>
 
       <!-- Quick suggestions -->
       <div class="suggestions">
@@ -245,6 +260,7 @@
         </div>
         <p id="auth-error-msg" class="error-msg hidden">Invalid credentials.</p>
         <button id="auth-submit-btn" class="primary-btn submit-btn">Sign In</button>
+        <button id="guest-btn" class="secondary-btn" style="margin-top: 0.8rem; width: 100%;">Continue without Login</button>
       </div>
     </div>
   </div>
@@ -276,7 +292,8 @@
       </div>
     </div>
   </div>
-
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
   <script src="script.js"></script>
 </body>
 </html>

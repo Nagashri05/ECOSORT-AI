@@ -404,6 +404,15 @@ input[type="text"]::placeholder {
   color: var(--primary);
 }
 
+.mic-btn {
+  background: none;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 button#search-btn {
   background: var(--primary);
   color: white;
